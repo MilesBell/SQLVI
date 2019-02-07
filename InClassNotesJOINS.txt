@@ -1,0 +1,86 @@
+--INNER JOINS
+SELECT vend_name, prod_name, prod_price 
+FROM Vendors INNER JOIN Products
+ON Vendors.vend_id=Products.vend_id;
+--inner join requires 'on' with the foreign keys, only for 2 tables, easier than subqueries
+
+SELECT vend_name, prod_name, prod_price
+FROM Vendors, Products
+WHERE Vendors.vend_id=Products.vend_id;
+--same as above, but works for more than 2 tables
+
+--JOINING MULTIPLE TABLES
+SELECT *
+FROM Vendors, Products, OrderItems
+WHERE Vendors.vend_id=Products.vend_id
+AND OrderItems.prod_id=Products.prod_id
+AND order_num=20007;
+--join w/multiple tables, must specify all tables as joined somehow (BUT, vend and prod_id joined twice)
+
+--ADVANCED JOINS (aliases for table names, making everything shorter)
+SELECT cust_name, cust_contact
+FROM Customers AS C, Orders AS O, OrderItems AS OI
+WHERE C.cust_id=O.cust_id
+AND O.order_num=OI.order_num
+AND prod_id='RGAN01';
+
+--SELF JOINS (i.e., get customer contacts of customers who work at same company as Jim Jones)
+SELECT cust_id, cust_name, cust_contact 
+FROM Customers
+WHERE cust_name IN(SELECT cust_name
+				FROM Customers
+				WHERE cust_contact='Jim Jones');
+
+--same as^v
+SELECT c1.cust_id, c1.cust_name, c1.cust_contact
+FROM Customers AS c1, Customers AS c2
+WHERE c1.cust_name=c2.cust_name
+AND c2.cust_contact='Jim Jones';
+
+--NATURAL JOINS (joins tables without the replicant, doesn't show primary key replicated in result. MUST ALIAS THE TABLES, by mentioning C*, or first letter of first mentioned table)
+SELECT C.*, O.order_num, O.order_date, OI.prod_id, OI.quantity, OI.item_price
+FROM Customers AS C, Orders AS O, OrderItems AS OI
+WHERE C.cust_id=O.cust_id
+AND O.order_num=OI.order_num
+AND prod_id='RGAN01';
+
+--OUTER JOINS (i.e., want to see all customers and all products, regardless if some customers haven't ordered any. Whereas normally it only shows customers who = products, or customers that exist as having ordered. Outer join ignores intersection and includes regardless)
+--Outer left is joining everything in the intersection, as well as everything in first table. Outer right joins everything in intersection as well as the last table mentioned
+--ALWAYS USE ON INSTEAD OF WHERE
+SELECT Customers.cust_id, Orders.order_num
+FROM Customers LEFT OUTER JOIN Orders
+ON Customers.cust_id=Orders.cust_id; --returns the intersection, and all customers who didnt order 
+
+SELECT Customers.cust_id, Orders.order_num
+FROM Customers RIGHT OUTER JOIN Orders
+ON Customers.cust_id=Orders.cust_id; --returns the intersection, and all orders regardless if a customer ordered it
+
+SELECT Customers.cust_id, Orders.order_num
+FROM Customers FULL OUTER JOIN Orders
+ON Customers.cust_id=Orders.cust_id; --returns the intersection, and all orders and customers regardless if they are connected via a specific order
+
+--JOINS WITH AGGREGATE FUNCTIONS
+SELECT Customers.cust_id, COUNT(Orders.order_num)
+FROM Customers INNER JOIN Orders
+ON Customers.cust_id=Orders.cust_id
+GROUP BY Customers.cust_id;
+
+
+
+
+
+
+SELECT cust_name, cust_contact
+FROM Customers
+WHERE cust_id IN(SELECT cust_id
+			     FROM Orders
+				 WHERE order_num IN(SELECT order_num 
+									FROM OrderItems
+									WHERE prod_id='RGAN01'));
+--Same^v
+SELECT cust_name, cust_contact
+FROM Customers, Orders, OrderItems
+WHERE Customers.cust_id=Orders.cust_id
+AND OrderItems.order_num=Orders.order_num
+AND prod_id='RGAN01';
+
